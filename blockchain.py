@@ -4,7 +4,11 @@ See https://hackernoon.com/learn-blockchains-by-building-one-117428612f46 for tu
 
 import hashlib
 import json
+from textwrap import dedent
 from time import time
+from uuid import uuid4
+
+from flask import Flask
 
 class Blockchain(object):
     def __init__(self):
@@ -99,9 +103,29 @@ class Blockchain(object):
     def last_block(self):
         return self.chain[-1]
 
-if __name__ == '__main__':
-    x = 5
-    y = 0 # we don't know what y should be yet
-    while hashlib.sha256(f'{x*y}'.encode()).hexdigest()[-1] != '0':
-        y += 1
-    print(f"The solution is y={y}")
+app = Flask(__name__)
+
+# a globally unique identifier for this node
+node_identifier = str(uuid4()).replace('-','')
+
+# instantiate the blockchain
+blockchain = Blockchain()
+
+@app.route('/mine', methods=['GET'])
+def mine():
+    return "We'll mine a new block."
+
+@app.route('/transactions/new', methods=['POST'])
+def new_transaction():
+    return "We'll add a new transaction."
+
+@app.route('/chain', methods=['GET'])
+def full_chain():
+    response = {
+        'chain': blockchain.chain,
+        'length': len(blockchain.chain),
+    }
+    return jsonify(response), 200
+
+if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=5000)    
