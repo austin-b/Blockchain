@@ -8,7 +8,7 @@ from textwrap import dedent
 from time import time
 from uuid import uuid4
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 class Blockchain(object):
     def __init__(self):
@@ -113,11 +113,43 @@ blockchain = Blockchain()
 
 @app.route('/mine', methods=['GET'])
 def mine():
-    return "We'll mine a new block."
+    # we run the proof of work algorithm to get the next proof
+    last_block = blockchain.last_block
+    last_proof = last_block['proof']
+    proof = blockchain.proof_of_work(last_proof)
+
+    # we must receive a reward for finding the proof
+    # the sender is '0' to signify that THIS node has mined a new coin
+    blockchain.new_transaction("0", node_identifier, 1)
+
+    # forge the new block by adding it to the chain
+    previous_hash = blockchain.hash(last_block)
+    block = blockchain.new_block(proof, previous_hash)
+
+    response = {
+        'message': "New Block Forged",
+        'index': block['index'],
+        'transactions': block['transactions'],
+        'proof': block['proof'],
+        'previous_hash': block['previous_hash'],
+    }
+
+    return jsonify(response), 200
 
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
-    return "We'll add a new transaction."
+    values = request.get_json()
+
+    # check that the required fields are in the POST data
+    required = ['sender', 'recipient', 'amount']
+    if not all (k in values for k in required):
+        return "Missing values", 400
+
+    # create a new transaction
+    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
+
+    response = {'message': f"Transaction will be added to Block {index}"}
+    return jsonify(response), 201
 
 @app.route('/chain', methods=['GET'])
 def full_chain():
@@ -128,4 +160,4 @@ def full_chain():
     return jsonify(response), 200
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000)    
+    app.run(host='127.0.0.1', port=5000)
