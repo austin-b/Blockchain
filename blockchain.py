@@ -81,7 +81,7 @@ class Blockchain(object):
         """
 
         guess = f"{last_proof}{proof}".encode()
-        guess_hash = hashlib.sha265(guess).hexdigest()
+        guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:4] == "0000"
 
     # staticmethod cannot change the properties of the class instance
@@ -104,6 +104,11 @@ class Blockchain(object):
         return self.chain[-1]
 
 app = Flask(__name__)
+
+# quick workaround for an error I was receiving while trying to use jsonify
+# other recommendations were to update Flask, but I'm fairly certain I'm  on the
+# most up to date version -- this should be fine for this little project
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 # a globally unique identifier for this node
 node_identifier = str(uuid4()).replace('-','')
@@ -142,7 +147,7 @@ def new_transaction():
 
     # check that the required fields are in the POST data
     required = ['sender', 'recipient', 'amount']
-    if not all (k in values for k in required):
+    if not all(k in values for k in required):
         return "Missing values", 400
 
     # create a new transaction
