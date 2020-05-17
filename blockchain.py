@@ -98,6 +98,35 @@ class Blockchain(object):
         parsed_url = urlparse(address)
         self.nodes.add(parsed_url.netloc)
 
+    def valid_chain(self, chain):
+        """
+        Determine if a given blockchain is valid
+        :param chain: <list> A blockchain
+        :return: <bool> True if valid, False if not
+        """
+
+        last_block = chain[0]
+        current_index = 1
+
+        while current_index < len(chain):
+            block = chain[current_index]
+            print(f'{last_block'})
+            print(f'{block}')
+            print("\n-------------\n")
+
+            # check that the hash of the block is correct
+            if block['previous_hash'] != self.hash(last_block):
+                return False
+
+            # check that the proof of work is correct
+            if not self.valid_proof(last_block['proof'], block['proof'])
+                return False
+
+            last_block = block
+            current_index += 1
+
+        return True
+
     # staticmethod cannot change the properties of the class instance
     @staticmethod
     def hash(block):
