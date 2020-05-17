@@ -110,7 +110,7 @@ class Blockchain(object):
 
         while current_index < len(chain):
             block = chain[current_index]
-            print(f'{last_block'})
+            print(f'{last_block}')
             print(f'{block}')
             print("\n-------------\n")
 
@@ -126,6 +126,39 @@ class Blockchain(object):
             current_index += 1
 
         return True
+
+    def resolve_conflicts(self):
+        """
+        This is our Consensus Algorithm, it resolves conflicts
+        by replacing our chain with the longest one in the network.
+        :return: <bool> True if our chain was replaced, False if not
+        """
+
+        neighbors = self.nodes
+        new_chain = None
+
+        # only looking for chains longer than ours
+        max_length = len(self.chain)
+
+        # grab and verify chains from all the nodes in the network
+        for node in neighbors:
+            response = requests.get(f"http://{node}/chain")
+
+            if response.status_code == 200:
+                length = response.json()['length']
+                chain = response.json()['chain']
+
+                # check if length is longer and the chain is valid
+                if length > max_length and self.valid_chain(chain)
+                max_length = length
+                new_chain = chain
+
+        # replace our chain if we discovered a new, valid chain longer than ours
+        if new_chain:
+            self.chain = new_chain
+            return True
+
+        return False
 
     # staticmethod cannot change the properties of the class instance
     @staticmethod
